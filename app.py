@@ -1,37 +1,39 @@
 import streamlit as st
+import joblib
+import pandas as pd
+
+# Modell laden
+model = joblib.load("model.pkl")
 
 st.set_page_config(page_title="GridBalance", page_icon="⚡")
 
-st.title("⚡ GridBalance")
-st.subheader("Einfache Bewertung für netzdienliche Stromnutzung")
+st.title("⚡ GridBalance – ML Version")
+st.write("Vorhersage für netzdienliche Stromnutzung")
 
-st.write("Gib Werte ein und prüfe, ob der Zeitpunkt eher gut oder schlecht ist.")
-
+# Eingaben
 hour = st.slider("Uhrzeit", 0, 23, 12)
 solar = st.slider("Solarproduktion", 0, 100, 50)
 wind = st.slider("Windproduktion", 0, 100, 50)
 
-if st.button("Bewertung anzeigen"):
-    score = solar + wind
+# Button
+if st.button("Vorhersage starten"):
 
-    if score >= 140:
-        result = "gut"
-        message = "Gute Zeit für flexible Stromnutzung."
-    elif score >= 80:
-        result = "mittel"
-        message = "Mittlere Eignung."
+    # Input für Modell
+    input_df = pd.DataFrame([{
+        "hour": hour,
+        "solar": solar,
+        "wind": wind
+    }])
+
+    # Vorhersage
+    prediction = model.predict(input_df)[0]
+
+    st.subheader(f"Vorhersage: {prediction}")
+
+    # Anzeige
+    if prediction == "gut":
+        st.success("Gute Zeit für Stromnutzung")
+    elif prediction == "mittel":
+        st.warning("Mittlere Zeit")
     else:
-        result = "schlecht"
-        message = "Eher ungünstige Zeit."
-
-    st.write(f"**Uhrzeit:** {hour}:00 Uhr")
-    st.write(f"**Solar:** {solar}")
-    st.write(f"**Wind:** {wind}")
-    st.write(f"**Bewertung:** {result}")
-
-    if result == "gut":
-        st.success(message)
-    elif result == "mittel":
-        st.warning(message)
-    else:
-        st.error(message)
+        st.error("Schlechte Zeit")
